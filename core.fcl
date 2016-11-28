@@ -1,0 +1,53 @@
+FUNCTION_BLOCK cooler
+// Define input variables
+VAR_INPUT				
+	cpu_temp : REAL;
+	gc_temp : REAL;
+END_VAR
+
+// Define output variable
+VAR_OUTPUT				
+	rpm : REAL;
+END_VAR
+
+// Fuzzify input variable 'cpu_temp': {'low', 'medium' , 'high'}
+FUZZIFY cpu_temp		
+	TERM low := trape 20 25 30 40;
+	TERM medium := trape 35 45 55 60;
+	TERM high := trape 55 65 100 100;
+END_FUZZIFY
+
+// Fuzzify input variable 'gc_temp': {'low', 'medium' , 'high'}
+FUZZIFY gc_temp		
+	TERM low := trape 20 25 30 40;
+	TERM medium := trape 35 45 55 60;
+	TERM high := trape 55 65 100 100;
+END_FUZZIFY
+
+// Defzzzify output variable 'rpm' : {'low', 'medium', 'high' }
+DEFUZZIFY rpm			
+	TERM low := trian 0 250 500;
+	TERM medium := trian 250 500 1000;
+	TERM high := trian 500 1000 1500;
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+// Inference rules
+RULEBLOCK No1
+	AND : MIN;	// Use 'min' for 'and'
+	ACT : MIN;	// Use 'min' activation method
+	ACCU : MAX;	// Use 'max' accumulation method
+
+	RULE 1 : IF cpu_temp IS high AND gc_temp IS high THEN rpm IS high;
+	RULE 2 : IF cpu_temp IS high AND gc_temp IS medium THEN rpm IS high;
+	RULE 3 : IF cpu_temp IS high AND gc_temp IS low THEN rpm IS medium;
+	RULE 4 : IF cpu_temp IS medium AND gc_temp IS high THEN rpm IS high;
+	RULE 5 : IF cpu_temp IS medium AND gc_temp IS medium THEN rpm IS medium;
+	RULE 6 : IF cpu_temp IS medium AND gc_temp IS low THEN rpm IS low;
+	RULE 7 : IF cpu_temp IS low AND gc_temp IS high THEN rpm IS medium;
+	RULE 8 : IF cpu_temp IS low AND gc_temp IS medium THEN rpm IS low;
+	RULE 9 : IF cpu_temp IS low AND gc_temp IS low THEN rpm IS low;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
